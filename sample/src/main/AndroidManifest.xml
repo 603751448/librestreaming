@@ -31,10 +31,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SoftStreamingActivity"
-            android:hardwareAccelerated="true"
-            android:theme="@style/StreamingTheme" />
-        <activity
             android:name=".HardStreamingActivity"
             android:hardwareAccelerated="true"
             android:theme="@style/StreamingTheme" />

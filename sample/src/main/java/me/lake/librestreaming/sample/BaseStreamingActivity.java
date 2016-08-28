@@ -8,15 +8,12 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -28,10 +25,8 @@ import java.io.OutputStream;
 import me.lake.librestreaming.client.RESClient;
 import me.lake.librestreaming.core.listener.RESConnectionListener;
 import me.lake.librestreaming.core.listener.RESScreenShotListener;
-import me.lake.librestreaming.filter.softaudiofilter.BaseSoftAudioFilter;
 import me.lake.librestreaming.model.RESConfig;
 import me.lake.librestreaming.model.Size;
-import me.lake.librestreaming.sample.audiofilter.SetVolumeAudioFilter;
 import me.lake.librestreaming.sample.ui.AspectTextureView;
 
 /**
@@ -43,12 +38,7 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
     public static final String RTMPADDR = "rtmpaddr";
     protected RESClient resClient;
     protected AspectTextureView txv_preview;
-    protected ListView lv_filter;
-    protected SeekBar sb_attr;
     protected SeekBar sb_zoom;
-    protected SeekBar sb_volume;
-    protected TextView tv_speed;
-    protected TextView tv_rtmp;
     protected Handler mainHander;
     protected Button btn_toggle;
     protected boolean started;
@@ -70,12 +60,7 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_streaming);
         txv_preview = (AspectTextureView) findViewById(R.id.txv_preview);
-        lv_filter = (ListView) findViewById(R.id.lv_filter);
-        sb_attr = (SeekBar) findViewById(R.id.sb_attr);
         sb_zoom = (SeekBar) findViewById(R.id.sb_zoom);
-        sb_volume = (SeekBar) findViewById(R.id.sb_volume);
-        tv_speed = (TextView) findViewById(R.id.tv_speed);
-        tv_rtmp = (TextView) findViewById(R.id.tv_rtmp);
         txv_preview.setKeepScreenOn(true);
         txv_preview.setSurfaceTextureListener(this);
         resClient = new RESClient();
@@ -83,7 +68,7 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
         resConfig.setFilterMode(filtermode);
         resConfig.setTargetVideoSize(new Size(720, 480));
         resConfig.setBitRate(1000 * 1024);
-        resConfig.setVideoFPS(20);
+        resConfig.setVideoFPS(30);
         resConfig.setRenderingMode(RESConfig.RenderingMode.OpenGLES);
         resConfig.setDefaultCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
         int frontDirection, backDirection;
@@ -114,21 +99,8 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
         btn_toggle = (Button) findViewById(R.id.btn_toggle);
         btn_toggle.setOnClickListener(this);
         findViewById(R.id.btn_swap).setOnClickListener(this);
-        findViewById(R.id.btn_flash).setOnClickListener(this);
         findViewById(R.id.btn_screenshot).setOnClickListener(this);
-        mainHander = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                tv_speed.setText("byteSpeed=" + (resClient.getAVSpeed() / 1024) + ";drawFPS=" + resClient.getDrawFrameRate() + ";sendFPS=" + resClient.getSendFrameRate() + ";sendbufferfreepercent=" + resClient.getSendBufferFreePercent());
-                sendEmptyMessageDelayed(0, 3000);
-                if (resClient.getSendBufferFreePercent() <= 0.05) {
-                    Toast.makeText(BaseStreamingActivity.this, "sendbuffer is full,netspeed is low!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        };
-        mainHander.sendEmptyMessageDelayed(0, 3000);
 
-        resClient.setSoftAudioFilter(new SetVolumeAudioFilter());
         sb_zoom.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -145,17 +117,10 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
 
             }
         });
-        sb_volume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        sb_zoom.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                BaseSoftAudioFilter audioFilter = resClient.acquireSoftAudioFilter();
-                if (audioFilter != null) {
-                    if (audioFilter instanceof SetVolumeAudioFilter) {
-                        SetVolumeAudioFilter blackWhiteFilter = (SetVolumeAudioFilter) audioFilter;
-                        blackWhiteFilter.setVolumeScale((float) (progress / 10.0));
-                    }
-                }
-                resClient.releaseSoftAudioFilter();
+                resClient.setZoomByPercent(progress / 100.0f);
             }
 
             @Override
@@ -168,7 +133,6 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
 
             }
         });
-        sb_volume.setProgress(10);
     }
 
 
@@ -207,7 +171,6 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
          * result==0 success
          * result!=0 failed
          */
-        tv_rtmp.setText("open=" + result);
     }
 
     @Override
@@ -220,7 +183,6 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
         /**
          * failed to write data,maybe restart.
          */
-        tv_rtmp.setText("writeError=" + errno);
     }
 
     @Override
@@ -229,7 +191,6 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
          * result==0 success
          * result!=0 failed
          */
-        tv_rtmp.setText("close=" + result);
     }
 
     @Override
@@ -274,9 +235,6 @@ public class BaseStreamingActivity extends AppCompatActivity implements RESConne
                 break;
             case R.id.btn_swap:
                 resClient.swapCamera();
-                break;
-            case R.id.btn_flash:
-                resClient.toggleFlashLight();
                 break;
             case R.id.btn_screenshot:
                 resClient.takeScreenShot(new RESScreenShotListener() {

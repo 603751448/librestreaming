@@ -32,17 +32,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void start() {
         Intent intent;
-        boolean isport = false;
-        if (rg_direction.getCheckedRadioButtonId() == R.id.rb_port) {
-            isport = true;
-        }
         if (rg_mode.getCheckedRadioButtonId() == R.id.rb_hard) {
             intent = new Intent(MainActivity.this, HardStreamingActivity.class);
-        } else {
-            intent = new Intent(MainActivity.this, SoftStreamingActivity.class);
+            intent.putExtra(BaseStreamingActivity.DIRECTION, true);
+            intent.putExtra(BaseStreamingActivity.RTMPADDR,et_url.getText().toString());
+            startActivity(intent);
         }
-        intent.putExtra(BaseStreamingActivity.DIRECTION, isport);
-        intent.putExtra(BaseStreamingActivity.RTMPADDR,et_url.getText().toString());
-        startActivity(intent);
     }
 }

@@ -13,7 +13,7 @@ public class SkinBlurHardVideoFilter extends OriginalHardVideoFilter {
             "precision mediump float;\n" +
             "uniform sampler2D uCamTexture;\n" +
             "varying mediump vec2 vCamTextureCoord;\n" +
-            "const float maxdelta = 0.08;\n" +
+            "uniform mediump float maxdelta;\n" +
             "uniform mediump float xStep;\n" +
             "uniform mediump float yStep;\n" +
             "const mediump mat3 rgb2yuv = mat3(0.299,-0.147,0.615,0.587,-0.289,-0.515,0.114,0.436,-0.1);\n" +
@@ -87,13 +87,16 @@ public class SkinBlurHardVideoFilter extends OriginalHardVideoFilter {
     private int xStepLoc;
     private int yStepLoc;
     private float stepScale;
+    private int maxdeltaLoc;
+    private float maxdelta;
 
     /**
      * @param stepScale suggest:480P = 2,720P = 3
      */
-    public SkinBlurHardVideoFilter(int stepScale) {
+    public SkinBlurHardVideoFilter(int stepScale,float maxdelta) {
         super(null, FRAGMENTSHADER);
         this.stepScale = (float) stepScale;
+        this.maxdelta = maxdelta;
     }
 
     @Override
@@ -101,6 +104,7 @@ public class SkinBlurHardVideoFilter extends OriginalHardVideoFilter {
         super.onInit(VWidth, VHeight);
         yStepLoc = GLES20.glGetUniformLocation(glProgram, "yStep");
         xStepLoc = GLES20.glGetUniformLocation(glProgram, "xStep");
+        maxdeltaLoc = GLES20.glGetUniformLocation(glProgram,"maxdelta");
     }
 
     @Override
@@ -108,5 +112,6 @@ public class SkinBlurHardVideoFilter extends OriginalHardVideoFilter {
         super.onPreDraw();
         GLES20.glUniform1f(xStepLoc, (float) (stepScale / SIZE_WIDTH));
         GLES20.glUniform1f(yStepLoc, (float) (stepScale / SIZE_HEIGHT));
+        GLES20.glUniform1f(maxdeltaLoc, maxdelta);
     }
 }

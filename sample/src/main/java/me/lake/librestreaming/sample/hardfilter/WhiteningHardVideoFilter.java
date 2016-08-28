@@ -16,13 +16,13 @@ import me.lake.librestreaming.tools.GLESTools;
 public class WhiteningHardVideoFilter extends BaseHardVideoFilter {
     byte[] colorMap;
 
-    public WhiteningHardVideoFilter() {
+    public WhiteningHardVideoFilter(float v) {
         colorMap = new byte[1024];
         int cur = -1;
         for (int i = 0; i < 256; i++) {
-            colorMap[++cur] = ((byte) (int) (255 * Math.pow(i / 255.0, 0.7)));
-            colorMap[++cur] = ((byte) (int) (255 * Math.pow(i / 255.0, 0.7)));;
-            colorMap[++cur] = ((byte) (int) (255 * Math.pow(i / 255.0, 0.65)));;
+            colorMap[++cur] = ((byte) (int) (255 * Math.pow(i / 255.0, v)));
+            colorMap[++cur] = ((byte) (int) (255 * Math.pow(i / 255.0, 0.95*v)));
+            colorMap[++cur] = ((byte) (int) (255 * Math.pow(i / 255.0, 0.85*v)));
             colorMap[++cur] = 0;
         }
     }
